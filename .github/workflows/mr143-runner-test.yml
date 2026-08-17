@@ -1,0 +1,18 @@
+name: MR-143 Secure Runner Test
+
+on:
+  push:
+    branches:
+      - mr143-secure-runner-20260817
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify public runner
+        run: |
+          python --version
+          echo "MR143_PUBLIC_RUNNER_OK"
