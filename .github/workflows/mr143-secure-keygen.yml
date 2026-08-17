@@ -1,0 +1,40 @@
+name: MR-143 Secure Keygen
+
+on:
+  push:
+    branches:
+      - mr143-secure-runner-20260817
+    paths:
+      - secure/mr143-keygen-trigger.txt
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  keygen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate ephemeral processing key
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p secure-runtime
+          openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:4096 -out secure-runtime/private.pem >/dev/null 2>&1
+          openssl pkey -in secure-runtime/private.pem -pubout -out secure-runtime/public.pem >/dev/null 2>&1
+          test -s secure-runtime/private.pem
+          test -s secure-runtime/public.pem
+      - name: Preserve private key in branch-scoped cache
+        uses: actions/cache/save@v4
+        with:
+          path: secure-runtime/private.pem
+          key: mr143-private-20260817-v1
+      - name: Upload public key only
+        uses: actions/upload-artifact@v4
+        with:
+          name: mr143-public-key
+          path: secure-runtime/public.pem
+          if-no-files-found: error
+          retention-days: 1
